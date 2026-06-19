@@ -1,0 +1,7 @@
+{
+  "go.goroot": "~/.local/share/mise/installs/go/latest",
+  "go.alternateTools": {
+    "go": "~/.local/share/mise/installs/go/latest/bin/go"
+  },
+  
+}
