@@ -189,12 +189,8 @@ func (s *SqlFS) Create(cancel <-chan struct{}, input *fuse.CreateIn, name string
 		Filepath: filepath,
 	}
 
-	_, dbErr := s.db.NewInsert().
-		Model(newFile).
-		Returning("id").
-		Exec(s.ctx)
-
-	if dbErr != nil {
+	dbErr := s.CreateFile(newFile)
+	if dbErr != fuse.OK {
 		fmt.Printf("Failed to insert into database: %v", dbErr)
 		return fuse.EIO
 	}
@@ -205,8 +201,8 @@ func (s *SqlFS) Create(cancel <-chan struct{}, input *fuse.CreateIn, name string
 		return fuse.EIO
 	}
 
-	f, dbErr := os.Create(fmt.Sprintf("%s/%016x", storageFolder, newFile.ID))
-	if dbErr != nil {
+	f, err := os.Create(fmt.Sprintf("%s/%016x", storageFolder, newFile.ID))
+	if err != nil {
 		fmt.Printf("Failed to create file: %v", dbErr)
 		return fuse.EIO
 	}
@@ -265,16 +261,16 @@ func (s *SqlFS) Unlink(cancel <-chan struct{}, header *fuse.InHeader, name strin
 		return fuse.EISDIR
 	}
 
-	dbErr := s.DeleteFile(file.ID)
-	if dbErr != fuse.OK {
-		fmt.Printf("Failed to delete from database: %v", dbErr)
-		return fuse.EIO
-	}
-
 	storageFolder := s.resolveStorageFolder(file.ID)
 	filePath := fmt.Sprintf("%s/%016x", storageFolder, file.ID)
 	if err := os.Remove(filePath); err != nil {
 		fmt.Printf("Failed to remove file from storage: %v", err)
+		return fuse.EIO
+	}
+
+	dbErr := s.DeleteFile(file.ID)
+	if dbErr != fuse.OK {
+		fmt.Printf("Failed to delete from database: %v", dbErr)
 		return fuse.EIO
 	}
 

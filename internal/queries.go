@@ -87,3 +87,17 @@ func (s *SqlFS) DeleteFile(id uint64) fuse.Status {
 
 	return fuse.OK
 }
+
+func (s *SqlFS) CreateFile(file *database.File) fuse.Status {
+	_, err := s.db.NewInsert().
+		Model(file).
+		Returning("id").
+		Exec(s.ctx)
+
+	if err != nil {
+		fmt.Printf("Failed to add file to database: %v", err)
+		return fuse.EIO
+	}
+
+	return fuse.OK
+}
