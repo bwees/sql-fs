@@ -3,5 +3,5 @@
   "go.alternateTools": {
     "go": "~/.local/share/mise/installs/go/latest/bin/go"
   },
-  
+  "editor.tabSize": 2
 }

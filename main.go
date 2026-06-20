@@ -28,7 +28,8 @@ func main() {
 		fs,
 		"/tmp/mnt", // mount point (must exist)
 		&fuse.MountOptions{
-			Debug: true,
+			Debug:      true,
+			AllowOther: true,
 		},
 	)
 	if err != nil {

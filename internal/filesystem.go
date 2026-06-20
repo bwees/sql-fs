@@ -28,6 +28,10 @@ func attrFor(f database.File) fuse.Attr {
 		Mode:  f.Mode,
 		Size:  uint64(f.Size),
 		Nlink: nlink,
+		Owner: fuse.Owner{
+			Uid: uint32(os.Getuid()),
+			Gid: uint32(os.Getgid()),
+		},
 	}
 }
 
@@ -64,6 +68,21 @@ func (s *SqlFS) Init(server *fuse.Server) {
 
 	s.db = db
 	s.ctx = context.Background()
+}
+
+func (s *SqlFS) StatFs(cancel <-chan struct{}, header *fuse.InHeader, out *fuse.StatfsOut) fuse.Status {
+	const blockSize = 4096
+	const totalBlocks = 1 << 30 // ~4 TiB of reported capacity
+
+	out.Bsize = blockSize
+	out.Frsize = blockSize
+	out.Blocks = totalBlocks
+	out.Bfree = totalBlocks
+	out.Bavail = totalBlocks
+	out.Files = 1 << 20
+	out.Ffree = 1 << 20
+	out.NameLen = 255
+	return fuse.OK
 }
 
 func (s *SqlFS) Lookup(cancel <-chan struct{}, header *fuse.InHeader, name string, out *fuse.EntryOut) (status fuse.Status) {
